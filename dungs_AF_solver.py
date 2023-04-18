@@ -1,18 +1,24 @@
 import io
+import os
 import networkx as nx
 import subprocess
 import matplotlib.pyplot as plt
 
-def run_mu_toksia(reasoning, semantics, filename, file_format, mu_toksia_path, query=None):
-    command = [mu_toksia_path, "./build/release/bin/mu-toksia", "-p", f'{reasoning}-{semantics}', "-f", filename, "-fo", file_format]
+
+def set_superuser(file_path):
+    subprocess.call(['sudo', 'chmod', '+x', file_path])
+    subprocess.call(['sudo', file_path])
+
+def run_mu_toksia(reasoning, semantics, filename, file_format, query=None):
+    command = ['sudo', 'docker', 'run', '-it', '-v', '{}:/data'.format(os.getcwd()), 'odinaldo/eqargsolver', './eqargsolver-2.87', '-p', f"{reasoning}-{semantics}", '-f', filename, '-fo', file_format]
     if query is not None:
-        command += ["-a", query]
+        command += ['-a', query]
+
     try:
-        output = subprocess.check_output(command, shell=True)
-        return output.decode("utf-8")
+        output = subprocess.run(command, capture_output=True, text=True, check=True).stdout
+        return output
     except subprocess.CalledProcessError as e:
         error_msg = f"Command '{e.cmd}' returned non-zero exit status {e.returncode}\n"
-        error_msg += f"Output: {e.output.decode('utf-8')}"
         raise RuntimeError(error_msg)
 
 def read_tgf_file(uploaded_file):
