@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1
 import networkx as nx
 from pyvis.network import Network
-from dungs_AF_solver import read_tgf_file, run_mu_toksia, set_superuser, highlight_nodes
+from dungs_AF_solver import read_tgf_file, run_solver
 
     
 
@@ -32,8 +32,11 @@ def main():
             # Choose computation
             #task = st.selectbox("Select a computation", ["Reachability", "Deadlock Freedom", "Boundedness"])
 
-            reasoning = st.selectbox('Reasoning:', ('DC', 'DS', 'SE', 'EE'))
-            semantics = st.selectbox('Semantics:', ('CO', 'PR', 'ST', 'GR'))
+            reasoning_options = ['DC', 'DS', 'SE', 'EE']
+            semantics_options = ['CO', 'PR', 'ST', 'GR']
+
+            semantics = st.selectbox("Semantics:", semantics_options, index=0)
+            reasoning = st.selectbox("Reasoning:", reasoning_options if semantics != "GR" else ['DC', 'SE'], index=0)
 
             # Ask the user for a query if necessary
             #if reasoning == 'DC' or reasoning == 'DS':
@@ -42,17 +45,15 @@ def main():
                 #query = None
 
             # Enter path to mu-toksia program
-            #file_path = st.text_input("Enter path to where the uploaded tgf file is from")
+            filepath = st.text_input("Enter path to where the uploaded tgf file is from")
 
 
 
             # Run computation
-            if st.button("Run Computation"):
-                #set_superuser(mu_toksia_path)
-                output = run_mu_toksia(reasoning, semantics, uploaded_file.name, "tgf", query)
-                st.text_area('Output:', value=output, height=400)
-                #highlighted_nodes = highlight_nodes(graph, output.split("\n"))
-                #st.graphviz_chart(nx.drawing.nx_pydot.to_pydot(graph, highlighted_nodes).to_string())
+            if st.button("Run Computation", key="run_computation_btn"):
+                output = run_solver(reasoning, semantics, uploaded_file.name, "tgf", filepath, query)
+                st.text_area('Output:', value=output, height=200)
+                
 
         else:
             st.write('File is empty!')
